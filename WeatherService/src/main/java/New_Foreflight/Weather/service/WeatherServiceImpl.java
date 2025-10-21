@@ -121,8 +121,7 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     public String getPirepData(String airportCode, int distance, int age) {
-        String url = String.format("%s/pirep?id=%s&distance=%d&age=%d", aviationWeatherUrl.substring(0, aviationWeatherUrl.indexOf("/windtemp?region=all")), airportCode, distance, age);
-        System.out.println(url);
+        String url = String.format("%s/pirep?id=%s&distance=%d&age=%d&format=json", aviationWeatherUrl.substring(0, aviationWeatherUrl.indexOf("/windtemp?region=all")), airportCode, distance, age);
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.getForObject(url, String.class);
     }
