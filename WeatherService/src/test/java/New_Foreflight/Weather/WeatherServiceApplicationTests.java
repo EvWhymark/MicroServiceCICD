@@ -96,7 +96,7 @@ class WeatherServiceApplicationTests {
         // Using coordinates for a test location (e.g., somewhere over the US)
         double latitude = 40.7128;
         double longitude = -74.0060;
-        
+
         ResponseEntity<AirmetResponse> airmetResponse = controller.getWxAirmet(latitude, longitude);
 
         assertTrue(airmetResponse.getStatusCode().is2xxSuccessful());
@@ -111,7 +111,7 @@ class WeatherServiceApplicationTests {
         } catch (JsonProcessingException exception) {
             exception.printStackTrace();
         }
-        
+
         JsonNode jsonNode = null;
 
         try {
@@ -120,7 +120,7 @@ class WeatherServiceApplicationTests {
             // Output individual JSON fields
             System.out.println("AIRMET Data for location: " + latitude + ", " + longitude);
             System.out.println("Results Count: " + jsonNode.get("results").asInt());
-            
+
             JsonNode dataArray = jsonNode.get("data");
             if (dataArray != null && dataArray.isArray() && dataArray.size() > 0) {
                 System.out.println("\nAIRMET Details:");
@@ -128,14 +128,14 @@ class WeatherServiceApplicationTests {
                     JsonNode airmet = dataArray.get(i);
                     System.out.println("\n--- AIRMET " + (i + 1) + " ---");
                     System.out.println("Category: " + airmet.get("category").asText());
-                    System.out.println("Hazard Type: " + airmet.get("hazard").get("type").get("code").asText() 
-                        + " - " + airmet.get("hazard").get("type").get("text").asText());
-                    System.out.println("Severity: " + airmet.get("hazard").get("severity").get("code").asText()
-                        + " - " + airmet.get("hazard").get("severity").get("text").asText());
+                    System.out.println("Hazard Type: " + airmet.get("hazard").get("type").get("code").asText() + " - "
+                            + airmet.get("hazard").get("type").get("text").asText());
+                    System.out.println("Severity: " + airmet.get("hazard").get("severity").get("code").asText() + " - "
+                            + airmet.get("hazard").get("severity").get("text").asText());
                     System.out.println("Valid From: " + airmet.get("timestamp").get("from").asText());
                     System.out.println("Valid To: " + airmet.get("timestamp").get("to").asText());
-                    System.out.println("Altitude: " + airmet.get("altitude").get("minimum").get("feet").asDouble() 
-                        + " - " + airmet.get("altitude").get("maximum").get("feet").asDouble() + " feet");
+                    System.out.println("Altitude: " + airmet.get("altitude").get("minimum").get("feet").asDouble()
+                            + " - " + airmet.get("altitude").get("maximum").get("feet").asDouble() + " feet");
                 }
             } else {
                 System.out.println("No AIRMET data found for this location.");

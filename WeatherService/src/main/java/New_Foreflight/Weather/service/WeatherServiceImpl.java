@@ -210,21 +210,21 @@ public class WeatherServiceImpl implements WeatherService {
 
     @Override
     public AirmetResponse getWxAirmet(double latitude, double longitude) {
-        String url = String.format("https://api.checkwx.com/airmet/point/%f/%f", latitude, longitude);
-
+        String url = String.format("https://api.checkwx.com/airmet/lat/%f/lon/%f", latitude, longitude);
+        System.out.println(url);
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-API-Key", weatherApiKey);
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-       ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
         String apiResponseJson = response.getBody();
 
         // Parse the JSON response
         Integer results = parseResults(apiResponseJson);
         List<HashMap<String, Object>> airmetData = parseAirmetData(apiResponseJson);
-        
+
         AirmetResponse airmetResponse = new AirmetResponse(results, airmetData);
         return airmetResponse;
     }
@@ -233,22 +233,23 @@ public class WeatherServiceImpl implements WeatherService {
         return new JSONObject(apiResponse).getInt("results");
     }
 
-private List<HashMap<String, Object>> parseAirmetData(String json) {
-    try {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(json);
-        JsonNode dataNode = root.get("data");
-        
-        List<HashMap<String, Object>> airmetList = new ArrayList<>();
-        if (dataNode.isArray()) {
-            for (JsonNode node : dataNode) {
-                HashMap<String, Object> airmet = mapper.convertValue(node, HashMap.class);
-                airmetList.add(airmet);
+    private List<HashMap<String, Object>> parseAirmetData(String json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(json);
+            JsonNode dataNode = root.get("data");
+
+            List<HashMap<String, Object>> airmetList = new ArrayList<>();
+            if (dataNode.isArray()) {
+                for (JsonNode node : dataNode) {
+                    HashMap<String, Object> airmet = mapper.convertValue(node, HashMap.class);
+                    airmetList.add(airmet);
+                }
             }
+            return airmetList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
         }
-        return airmetList;
-    } catch (Exception e) {
-        return new ArrayList<>();
     }
-}
 }
