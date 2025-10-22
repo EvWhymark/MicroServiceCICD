@@ -1,5 +1,6 @@
 package New_Foreflight.Weather.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import New_Foreflight.Weather.dto.AirportWeatherResponse;
@@ -31,4 +32,6 @@ public interface WeatherService {
     public String getWindsAloft(double latitude, double longitude, int altitude);
 
     public String getTAF(String icao);
+
+    public ArrayList<AirportWeatherResponse> getNearbyMETAR(String icao);
 }

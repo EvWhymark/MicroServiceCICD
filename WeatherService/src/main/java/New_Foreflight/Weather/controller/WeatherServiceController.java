@@ -1,6 +1,9 @@
 package New_Foreflight.Weather.controller;
 
 import New_Foreflight.Weather.dto.AirportWeatherResponse;
+
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +22,18 @@ public class WeatherServiceController {
     WeatherService weatherService;
 
     @GetMapping(value = "/getAirportWeather")
-    public ResponseEntity<AirportWeatherResponse> getAirportWeather(@RequestParam String airportCode) {
+    public ResponseEntity<AirportWeatherResponse> getAirportWeather(@RequestParam String icao) {
         try {
-            return ResponseEntity.ok(weatherService.getAirportWeather(airportCode));
+            return ResponseEntity.ok(weatherService.getAirportWeather(icao));
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping(value = "/NearbyMetar")
+    public ResponseEntity<ArrayList<AirportWeatherResponse>> getNearbyMETAR(@RequestParam String icao) {
+        try {
+            return ResponseEntity.ok(weatherService.getNearbyMETAR(icao));
         } catch (Exception exception) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
