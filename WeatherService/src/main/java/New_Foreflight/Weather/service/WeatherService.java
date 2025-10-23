@@ -1,5 +1,6 @@
 package New_Foreflight.Weather.service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import New_Foreflight.Weather.dto.AirmetResponse;
@@ -15,7 +16,7 @@ public interface WeatherService {
 
     public String getFlightConditions(String apiResponseJson);
 
-    public String getPirepData(String airportCode, int dist, int time);
+    public String getPirepData(String icao, int dist, int time);
 
     public String getAirSigmet();
 
@@ -32,4 +33,7 @@ public interface WeatherService {
     public String getWindsAloft(double latitude, double longitude, int altitude);
 
     public AirmetResponse getWxAirmet(double latitude, double longitude);
+    public String getTAF(String icao);
+
+    public ArrayList<AirportWeatherResponse> getNearbyMETAR(String icao);
 }

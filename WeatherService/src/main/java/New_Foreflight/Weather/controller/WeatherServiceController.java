@@ -1,5 +1,6 @@
 package New_Foreflight.Weather.controller;
 
+import New_Foreflight.Weather.dto.AirportWeatherResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +21,18 @@ public class WeatherServiceController {
     WeatherService weatherService;
 
     @GetMapping(value = "/getAirportWeather")
-    public ResponseEntity<AirportWeatherResponse> getAirportWeather(@RequestParam String airportCode) {
+    public ResponseEntity<AirportWeatherResponse> getAirportWeather(@RequestParam String icao) {
         try {
-            return ResponseEntity.ok(weatherService.getAirportWeather(airportCode));
+            return ResponseEntity.ok(weatherService.getAirportWeather(icao));
+        } catch (Exception exception) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping(value = "/NearbyMetar")
+    public ResponseEntity<ArrayList<AirportWeatherResponse>> getNearbyMETAR(@RequestParam String icao) {
+        try {
+            return ResponseEntity.ok(weatherService.getNearbyMETAR(icao));
         } catch (Exception exception) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
@@ -48,11 +58,13 @@ public class WeatherServiceController {
     }
 
     @GetMapping(value = "/getPireps")
-    public ResponseEntity<String> getPireps(@RequestParam String airportCode, @RequestParam int distance,
+    public ResponseEntity<String> getPireps(
+            @RequestParam String airportCode,
+            @RequestParam int distance,
             @RequestParam int age) {
         try {
             String pireps = weatherService.getPirepData(airportCode, distance, age);
-
+            
             return ResponseEntity.ok(pireps);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("no pireps");
@@ -81,18 +93,18 @@ public class WeatherServiceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("no air sigmet");
         }
     }
-
+    
     @GetMapping(value = "/getMetar")
     public ResponseEntity<String> getMetar(@RequestParam String airportcode, @RequestParam int hours) {
         try {
             String metar = weatherService.getMetar(airportcode, hours);
-
+            
             return ResponseEntity.ok(metar);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("no metar");
         }
     }
-
+    
     @GetMapping(value = "/getGAirmet")
     public ResponseEntity<String> getGAirmet(@RequestParam int southLat, @RequestParam int westLon,
             @RequestParam int northLat, @RequestParam int eastLon) {
@@ -115,15 +127,4 @@ public class WeatherServiceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("no DewPointSpread");
         }
     }
-
-    @GetMapping(value = "/getWxAirmet")
-    public ResponseEntity<AirmetResponse> getWxAirmet(@RequestParam double latitude, @RequestParam double longitude) {
-        try {
-            AirmetResponse airmet = weatherService.getWxAirmet(latitude, longitude);
-            return ResponseEntity.ok(airmet);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
-    }
-
 }
