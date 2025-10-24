@@ -52,8 +52,6 @@ env:
   PROJECT_ID: 'flightiq-475420'
   REGION: 'us-east4'
   SERVICE: 'weather-service'
-  WORKLOAD_IDENTITY_PROVIDER: ${{secrets.WORKLOAD_IDENTITY_PROVIDER}}
-  SERVICE_ACCOUNT: ${{secrets.SERVICE_ACCOUNT}}
 
 jobs:
   deploy:
