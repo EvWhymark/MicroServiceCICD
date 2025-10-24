@@ -1,7 +1,5 @@
 package New_Foreflight.Weather.controller;
 
-import New_Foreflight.Weather.dto.AirportWeatherResponse;
-
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import New_Foreflight.Weather.dto.AirportWeatherResponse;
 import New_Foreflight.Weather.service.WeatherService;
 
 @RestController
@@ -108,12 +107,9 @@ public class WeatherServiceController {
     @GetMapping(value = "/getGAirmet")
     public ResponseEntity<String> getGAirmet(@RequestParam int southLat, @RequestParam int westLon,
             @RequestParam int northLat, @RequestParam int eastLon) {
-    public ResponseEntity<String> getGAirmet(@RequestParam int southLat, @RequestParam int westLon,
-            @RequestParam int northLat, @RequestParam int eastLon) {
         try {
             String GAirmet = weatherService.getGAirmet(southLat, westLon, northLat, eastLon);
 
-            String GAirmet = weatherService.getGAirmet(southLat, westLon, northLat, eastLon);
 
             return ResponseEntity.ok(GAirmet);
         } catch (Exception e) {
