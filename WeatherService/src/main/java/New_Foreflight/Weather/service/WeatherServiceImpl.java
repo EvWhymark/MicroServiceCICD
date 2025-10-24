@@ -62,17 +62,19 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     @Override
-    public ArrayList<AirportWeatherResponse> getNearbyMETAR(String icao) {
+    public ArrayList<AirportWeatherResponse> getNearbyMETAR(double latitude, double longitude) {
         ArrayList<AirportWeatherResponse> nearby = new ArrayList<>();
 
         try {
-            if (WeatherServiceUtility.getWeatherCache(icao) != null)
-                nearby.add(WeatherServiceUtility.getWeatherCache(icao));
+            // I am assuming that there is a cache for the airport's metar data since there is coords for everywhere. 
+            // if (WeatherServiceUtility.getWeatherCache() != null)
+            //     nearby.add(WeatherServiceUtility.getWeatherCache(icao));
 
             int radius = 30;
             String base = weatherApiUrl.substring(0, weatherApiUrl.indexOf("metar"));
             String endpoint = base
-                    + String.format("metar/%s/radius/%d/decoded?x-api-key=%s", icao, radius, weatherApiKey);
+                    +String.format("metar/lat/%f/lon/%f/radius/%d/decoded?x-api-key=%s", 
+                        latitude, longitude, radius, weatherApiKey);
 
             RestTemplate restTemplate = new RestTemplate();
             String apiResponseJson = restTemplate.getForObject(endpoint, String.class);
@@ -80,7 +82,7 @@ public class WeatherServiceImpl implements WeatherService {
             JSONObject root = new JSONObject(apiResponseJson);
             for (int i = 0; i < root.getJSONArray("data").length(); i++) {
                 JSONObject stationObj = root.getJSONArray("data").getJSONObject(i);
-                String stationIcao = stationObj.optString("icao", icao);
+                String stationIcao = stationObj.optString("icao", "");
 
                 // use cached if available
                 if (WeatherServiceUtility.getWeatherCache(stationIcao) != null) {

@@ -1,6 +1,5 @@
 package New_Foreflight.Weather.dto;
 
-
 import java.util.HashMap;
 import java.util.List;
 

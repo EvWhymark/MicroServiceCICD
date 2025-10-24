@@ -35,5 +35,5 @@ public interface WeatherService {
     public AirmetResponse getWxAirmet(double latitude, double longitude);
     public String getTAF(String icao);
 
-    public ArrayList<AirportWeatherResponse> getNearbyMETAR(String icao);
+    public ArrayList<AirportWeatherResponse> getNearbyMETAR(double latitude, double longitude);
 }
