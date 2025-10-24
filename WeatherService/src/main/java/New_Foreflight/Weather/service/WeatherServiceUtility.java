@@ -100,6 +100,13 @@ public class WeatherServiceUtility {
                 : String.format("%d at %d kts", direction, speedKts);
     }
 
+    protected static String parsePositionString(Object positionObject) {
+        JSONObject pSONObject = (JSONObject) positionObject;
+        String orientation = pSONObject.getJSONObject("orientation").optString("from");
+        String distance = pSONObject.getJSONObject("distance").optString("miles");
+        return distance + " miles " + orientation;
+    }
+
     protected static String parseVisibility(Object visibilityDataObj) {
         JSONObject visibilityData = (JSONObject) visibilityDataObj;
 

@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -38,6 +39,7 @@ public class WeatherServiceImpl implements WeatherService {
         if (WeatherServiceUtility.getWeatherCache(icao) != null)
             return WeatherServiceUtility.getWeatherCache(icao);
         String endpoint = weatherApiUrl.replace("{station}", icao).replace("{key}", weatherApiKey);
+        System.out.println("endpoint = " + endpoint);
         RestTemplate restTemplate = new RestTemplate();
         String apiResponseJson = restTemplate.getForObject(endpoint, String.class);
 
@@ -48,6 +50,54 @@ public class WeatherServiceImpl implements WeatherService {
 
         WeatherServiceUtility.addToWeatherCache(icao, response);
         return response;
+    }
+
+    @Override
+    public ArrayList<AirportWeatherResponse> getNearbyMETAR(String icao) {
+        ArrayList<AirportWeatherResponse> nearby = new ArrayList<>();
+
+        try {
+            if (WeatherServiceUtility.getWeatherCache(icao) != null)
+                nearby.add(WeatherServiceUtility.getWeatherCache(icao));
+
+            int radius = 30;
+            String base = weatherApiUrl.substring(0, weatherApiUrl.indexOf("metar"));
+            String endpoint = base
+                    + String.format("metar/%s/radius/%d/decoded?x-api-key=%s", icao, radius, weatherApiKey);
+
+            RestTemplate restTemplate = new RestTemplate();
+            String apiResponseJson = restTemplate.getForObject(endpoint, String.class);
+
+            JSONObject root = new JSONObject(apiResponseJson);
+            for (int i = 0; i < root.getJSONArray("data").length(); i++) {
+                JSONObject stationObj = root.getJSONArray("data").getJSONObject(i);
+                String stationIcao = stationObj.optString("icao", icao);
+
+                // use cached if available
+                if (WeatherServiceUtility.getWeatherCache(stationIcao) != null) {
+                    nearby.add(WeatherServiceUtility.getWeatherCache(stationIcao));
+                    continue;
+                }
+
+                // wrap single station into the same structure expected by helpers
+                String stationResponseJson = "{\"data\":[" + stationObj.toString() + "]}";
+
+                String rawMetar = parseRawMetarText(stationResponseJson);
+                HashMap<String, Object> seperatedComponents = separateMetarComponents(stationResponseJson);
+                String flightRules = getFlightConditions(stationResponseJson);
+
+                AirportWeatherResponse response = new AirportWeatherResponse(rawMetar, seperatedComponents,
+                        flightRules);
+
+                // cache each airport response returned by nearest/radius call
+                WeatherServiceUtility.addToWeatherCache(stationIcao, response);
+                nearby.add(response);
+            }
+        } catch (Exception e) {
+            System.err.println("getNearbyMETAR error: " + e.getMessage());
+        }
+
+        return nearby;
     }
 
     @Override
@@ -76,6 +126,8 @@ public class WeatherServiceImpl implements WeatherService {
                 WeatherServiceUtility::parseHumidity);
         WeatherServiceUtility.addComponentIfPresent(result, "elevation", metarComponents,
                 WeatherServiceUtility::parseElevation);
+        WeatherServiceUtility.addComponentIfPresent(result, "position", metarComponents,
+                WeatherServiceUtility::parsePositionString);
         metarComponents.put("density_altitude", WeatherServiceUtility.computeDensityAltitude(metarComponents));
 
         return metarComponents;
@@ -127,8 +179,11 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     public String getAirSigmet() {
-        String url = String.format("%s/airsigmet?type=SIGMET", aviationWeatherUrl);
 
+        String baseApiUrl = aviationWeatherUrl.replaceFirst("(?i)/api/data(/.*)?(\\?.*)?$", "/api/data");
+        String url = String.format("%s/airsigmet?format=json&type=sigmet", baseApiUrl);
+
+        System.out.println("url " + url);
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.getForObject(url, String.class);
     }
@@ -195,5 +250,15 @@ public class WeatherServiceImpl implements WeatherService {
         } catch (Exception e) {
             return "dew point spread N/A " + e.getMessage();
         }
+    }
+
+    public String getTAF(String icao) {
+        String endpoint = weatherApiUrl.substring(0, weatherApiUrl.indexOf("metar"))
+                .concat("taf/{station}/nearest/decoded?x-api-key={key}").replace("{station}", icao)
+                .replace("{key}", weatherApiKey);
+
+        RestTemplate restTemplate = new RestTemplate();
+        String apiResponseJson = restTemplate.getForObject(endpoint, String.class);
+        return apiResponseJson;
     }
 }
