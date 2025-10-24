@@ -52,8 +52,8 @@ env:
   PROJECT_ID: 'flightiq-475420'
   REGION: 'us-east4'
   SERVICE: 'my-service'
-  WORKLOAD_IDENTITY_PROVIDER: 'projects/941378787241/locations/global/workloadIdentityPools/github/providers/my-repo'
-  SERVICE_ACCOUNT: 'github-deployer@flightiq-475420.iam.gserviceaccount.com'
+  WORKLOAD_IDENTITY_PROVIDER: '${{secrets.WORKLOAD_IDENTITY_PROVIDER}}'
+  SERVICE_ACCOUNT: '${{secrets.SERVICE_ACCOUNT}}'
 
 jobs:
   deploy:

@@ -6,6 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -34,19 +39,26 @@ public class WeatherServiceImpl implements WeatherService {
 
     @Override
     public AirportWeatherResponse getAirportWeather(String icao) {
-        if (WeatherServiceUtility.getWeatherCache(icao) != null)
+        if (WeatherServiceUtility.getWeatherCache(icao) != null) {
             return WeatherServiceUtility.getWeatherCache(icao);
-        String endpoint = weatherApiUrl.replace("{station}", icao).replace("{key}", weatherApiKey);
+        }
         RestTemplate restTemplate = new RestTemplate();
-        String apiResponseJson = restTemplate.getForObject(endpoint, String.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("X-API-Key", weatherApiKey);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
 
+        ResponseEntity<String> apiResponse = restTemplate.exchange(weatherApiUrl.replace("{station}", icao),
+                HttpMethod.GET, entity, String.class);
+
+        String apiResponseJson = apiResponse.getBody();
         String rawMetar = parseRawMetarText(apiResponseJson);
-        HashMap<String, Object> seperatedComponents = separateMetarComponents(apiResponseJson);
+        HashMap<String, Object> separatedComponents = separateMetarComponents(apiResponseJson);
         String flightRules = getFlightConditions(apiResponseJson);
-        AirportWeatherResponse response = new AirportWeatherResponse(rawMetar, seperatedComponents, flightRules);
 
-        WeatherServiceUtility.addToWeatherCache(icao, response);
-        return response;
+        AirportWeatherResponse airportWeatherResponse = new AirportWeatherResponse(rawMetar, separatedComponents,
+                flightRules);
+        WeatherServiceUtility.addToWeatherCache(icao, airportWeatherResponse);
+        return airportWeatherResponse;
     }
 
     @Override
@@ -120,10 +132,7 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     public String getPirepData(String airportCode, int distance, int age) {
-        String url = String.format(
-            "%s/pirep?id=%s&distance=%d&age=%d",
-            aviationWeatherUrl, airportCode, distance, age
-        );
+        String url = String.format("%s/pirep?id=%s&distance=%d&age=%d", aviationWeatherUrl, airportCode, distance, age);
 
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.getForObject(url, String.class);
@@ -137,56 +146,46 @@ public class WeatherServiceImpl implements WeatherService {
     }
 
     public String getWindTemp(String reigon, String forcast, String level) {
-        String url = String.format(
-            "%s/windtemp?region=%s&fcst=%s&level=%s",
-            aviationWeatherUrl, reigon, forcast, level
-        );
+        String url = String.format("%s/windtemp?region=%s&fcst=%s&level=%s", aviationWeatherUrl, reigon, forcast,
+                level);
         RestTemplate restTemplate = new RestTemplate();
-        
+
         return restTemplate.getForObject(url, String.class);
     }
-    
+
     public String getMetar(String airport, int hours) {
-        String url = String.format(
-                "%s/metar?ids=%s&hours=%d", 
-                aviationWeatherUrl, airport, hours
-            );
+        String url = String.format("%s/metar?ids=%s&hours=%d", aviationWeatherUrl, airport, hours);
 
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.getForObject(url, String.class);
     }
-    
 
-    
-    public String getGAirmet(int southLat, int westLon, int northLat, int eastLon
-            ) {
-		String zuluTime = Instant.now().atOffset(ZoneOffset.UTC)
-                .format(DateTimeFormatter.ISO_INSTANT);
+    public String getGAirmet(int southLat, int westLon, int northLat, int eastLon) {
+        String zuluTime = Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
 
-		System.out.println("Zulu Time: " + zuluTime);
+        System.out.println("Zulu Time: " + zuluTime);
         String date = LocalDate.parse(zuluTime.substring(0, 10)).toString();
         String sT = date + "T00:00:00Z";
         String eT = LocalDate.parse(date).plusDays(1) + "T00:00:00Z";
         String apiUrl = String.format(
                 "%s/dataserver?requestType=retrieve&dataSource=gairmets&startTime=%s&endTime=%s&format=xml&boundingBox=%d,%d,%d,%d",
-                aviationWeatherUrl, sT, eT, southLat, westLon, northLat, eastLon
-            );
+                aviationWeatherUrl, sT, eT, southLat, westLon, northLat, eastLon);
 
         System.out.println(apiUrl);
-		RestTemplate restTemplate = new RestTemplate();
-		String xml = restTemplate.getForObject(apiUrl, String.class);
-		
-		return xml;
-	}
-    
+        RestTemplate restTemplate = new RestTemplate();
+        String xml = restTemplate.getForObject(apiUrl, String.class);
+
+        return xml;
+    }
+
     private double extractCelsius(String formattedString) {
         if (formattedString == null || !formattedString.contains("degrees C"))
             throw new IllegalArgumentException("Celsius value missing");
         String[] parts = formattedString.split(",");
-        String celsiusPart = parts[1].trim(); 
+        String celsiusPart = parts[1].trim();
         String[] tokens = celsiusPart.split(" ");
 
-        return Double.parseDouble(tokens[0]); 
+        return Double.parseDouble(tokens[0]);
     }
 
     public String getDewPointSpread(String icao) {
@@ -199,7 +198,6 @@ public class WeatherServiceImpl implements WeatherService {
             String tempString = (String) separatedComponents.get("temperature");
             String dewString = (String) separatedComponents.get("dewpoint");
 
-           
             double tempC = extractCelsius(tempString);
             double dewC = extractCelsius(dewString);
 
